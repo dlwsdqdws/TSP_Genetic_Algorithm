@@ -16,13 +16,14 @@ def readFile(filename):
         lst = line.split(" ")
         locations.append(lst)
         line = file.readline()
-
+    
     file.close()
+    
 
     return locations
 
 def coolDown(temp):
-    return (temp * 90) / 100
+    return temp * 0.95
 
 def check_repeat(populations, i, j, r):
     for u in range(j+1):
@@ -34,37 +35,14 @@ def rand(st, ed):
     #generate random number from st to ed, st is included but ed not
     return randint(st, ed-1)
 
-def select(populations, fitness, best_fit):
-    pop_sz = len(populations)
-    city_sz = len(populations[0]) 
-
-    tmp = [[0]*(city_sz+1) for _ in range(pop_sz)]
-
-    s = 0
-    for fit in fitness:
-        s += fit
-    
-    # Roulette Wheel
-    #pi = fitness[i] / s
-    #qi = sum(pi), from 0 to i
-    select = [0]*(pop_sz+1)
-    for i in range(pop_sz):
-        select[i+1] = select[i] + fitness[i]*1.0 / s
-    
-    tmp[0] = populations[best_fit]
-    for i in range(1, pop_sz):
-        r = random()
-        for j in range(1, pop_sz):
-            if select[j] >= r:
-                break
-        tmp[i] = populations[j]
-    
-    return tmp
 
 def select_parent(fitness):
     tot_fit = 0
-    for fit in fitness:
-        tot_fit += fit
+    best_fit = 0
+    for i in range(len(fitness)):
+        if fitness[i] >= fitness[best_fit]:
+            best_fit = i
+        tot_fit += fitness[i]
     
     pop_sz = len(fitness)
 
@@ -77,25 +55,8 @@ def select_parent(fitness):
     for i in range(pop_sz):
         if select[i] >= r:
             return i
-
-def mutate(route, prob, temperature):
-    city_sz = len(route)
-
-    old_fitness = calc_fitness(route)
-    m = random()
-    if m < prob:
-        p1 = rand(1, city_sz-1)
-        p2 = rand(1, city_sz-1)
-        if p1 >= p2:
-            p1,p2 = p2,p1
-        route = route[:p1] + route[p1:p2+1][::-1] + route[p2+1:]
-        new_fitness = calc_fitness(route)
-        
-        if new_fitness < old_fitness:
-                if pow(2.7, -1.0 * (old_fitness - new_fitness) / temperature) > 0.5:
-                    route = route[:p1] + route[p1:p2+1][::-1] + route[p2+1:]
     
-    return route
+    return best_fit
 
 
 def crossover(populations, fitness, prob, best_fit):
@@ -110,9 +71,15 @@ def crossover(populations, fitness, prob, best_fit):
         
         p1 = select_parent(fitness)
         p2 = select_parent(fitness) 
-
-        while p2 == p1:
-            p2 = select_parent(fitness)
+        
+        for k in range(1000):
+            if p2 == p1:
+               p2 = select_parent(fitness)
+            else:
+                break
+        
+        if not p2:
+            p2 = 0
 
         route1 = populations[p1][:-1]
         route2 = populations[p2][:-1]
@@ -170,27 +137,9 @@ def calc_fitness(city):
     s = 0
     for i in range(1, len(city)):
         s += calculateDistance(locations[city[i]], locations[city[i-1]])
-    return 1000000.0 / s
+    return 100000.0 / s
 
-def mutate_populations(populations, prob, best_fit, temperature):
-    pop_sz = len(populations)
-    city_sz = len(populations[0])
 
-    for i in range(pop_sz):
-        m = random()
-        index = rand(pop_sz)
-        if index != best_fit and m < prob:
-            p1 = rand(1, city_sz-1)
-            p2 = rand(1, city_sz-1)
-            if p1 > p2:
-                p1, p2 = p2, p1
-            tmp = populations[index][:p1] + populations[index][p1:p2+1][::-1] + populations[index][p2+1:]
-            tmp_fitness = calc_fitness(tmp)
-            index_fitness = calc_fitness(populations[index])
-            if tmp_fitness < index_fitness:
-                if pow(2.7, -1 * (index_fitness - tmp_fitness) / temperature) > 0.5:
-                     tmp = populations[index][:p1] + populations[index][p1:p2+1][::-1] + populations[index][p2+1:]
-            
 
 def initPopulations(pop_size, city_sz):
     populations = [[0]*(city_sz+1) for _ in range(pop_size)]
@@ -230,7 +179,7 @@ def fitness_calc(populations):
 
 def GAWork(weight):
     gen = 1
-    gen_iter = 1000
+    gen_iter = 100
     pop_size = 50
     city_sz = len(weight)
 
@@ -241,14 +190,11 @@ def GAWork(weight):
 
     temperature = 1000
 
-    
 
-    while temperature > 100 and gen < gen_iter:
+    while gen < gen_iter:
         populations = crossover(populations, fitness, 0.5, best_fit)
         fitness, best_fit = fitness_calc(populations)
         gen += 1
-
-    print(populations[best_fit])
     
     return populations[best_fit]
 
@@ -272,15 +218,13 @@ def GA():
         for j in range(i+1, n):
             w[i][j] = w[j][i] = calculateDistance(locations[i], locations[j])
 
-    # print(w)
     output(GAWork(w))
 
 
 if __name__ == "__main__":
     #read all locations
     global locations 
-    locations = readFile("test.txt")
-
-    print(locations)
+    locations = readFile("input.txt")
 
     GA()
+    
