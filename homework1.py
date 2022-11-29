@@ -68,14 +68,11 @@ def select_parent(fitness):
     
     pop_sz = len(fitness)
 
-    # print(fitness)
-
     select = [0]*(pop_sz+1)
     select[0] = fitness[0] * 1.0 / tot_fit
     for i in range(pop_sz):
         select[i+1] = select[i] + fitness[i] * 1.0 / tot_fit
 
-    # print(select)
     r = random()
     for i in range(pop_sz):
         if select[i] >= r:
@@ -100,46 +97,6 @@ def mutate(route, prob, temperature):
     
     return route
 
-
-# def crossover(populations, fitness, prob, best_fit):
-#     pop_sz = len(populations)
-#     city_sz = len(populations[0]) 
-
-#     tmp = [[0]*(city_sz) for _ in range(pop_sz)]
-
-#     tmp[0] = populations[best_fit]
-
-#     for i in range(1, pop_sz):
-        
-#         p1 = select_parent(fitness)
-#         p2 = select_parent(fitness) 
-
-#         while p2 == p1:
-#             p2 = select_parent(fitness)
-
-
-#         used = [0]*(city_sz-1)
-
-#         for j in range(1, city_sz-1):
-#             r = random()
-#             if r < prob:
-#                 tmp[i][j] = populations[p1][j]
-#             else:
-#                 tmp[i][j] = populations[p2][j]
-#             used[j] = tmp[i][j]
-
-#             k = 0
-#             while k < j:
-#                 if tmp[i][j] == used[k]:
-#                     tmp[i][j] = rand(1, city_sz-1)
-#                     k = 0
-#                 else:
-#                     k += 1
-#             used[j] = tmp[i][j]
-
-#         tmp[i] = mutate(tmp[i], 0.5, 10000)
-
-#     return tmp
 
 def crossover(populations, fitness, prob, best_fit):
     pop_sz = len(populations)
@@ -256,9 +213,6 @@ def fitness_calc(populations):
     pop_sz = len(populations)
     city_sz = len(populations[0])   #number of city + 1
 
-    # print(populations)
-    # print(city_sz)
-
     fitness = [0]*pop_sz
 
     fit_para = 1000000
@@ -299,7 +253,7 @@ def GAWork(weight):
     return populations[best_fit]
 
 def output(route):
-    file = open("/Users/lulei/Desktop/output.txt", 'w')
+    file = open("output.txt", 'w')
     for r in range(len(route)):
         city = locations[route[r]]
         for i in range(len(city)):
@@ -325,10 +279,8 @@ def GA():
 if __name__ == "__main__":
     #read all locations
     global locations 
-    locations = readFile("/Users/lulei/Desktop/test.txt")
+    locations = readFile("test.txt")
 
     print(locations)
-    # print(locations)
-    # print(calculateDistance(locations[0], locations[1]))
 
     GA()
